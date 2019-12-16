@@ -54,11 +54,7 @@ void PIXELS::show(){
 
 void PIXELS::show(pixel *pixels, unsigned cnt){
     for(unsigned i = 0; i<cnt; i++){
-        #ifdef RGBW
-        strip.SetPixelColor(i, RgbwColor(pixels[i].R,pixels[i].G,pixels[i].B,pixels[i].W));
-        #else
-        strip.SetPixelColor(i, RgbColor(pixels[i].R,pixels[i].G,pixels[i].B));
-        #endif
+        strip.SetPixelColor(i, pixels[i]);
     }
     strip.Show();
 }

@@ -17,14 +17,11 @@
 
 #define USECRC false
 
-typedef struct{
-    uint8_t R = 0;
-    uint8_t G = 0;
-    uint8_t B = 0;
-    #ifdef RGBW
-    uint8_t W = 0;
-    #endif
-} pixel;
+#ifdef RGBW
+    typedef RgbwColor pixel;
+#else
+    typedef RgbColor pixel;
+#endif
 
 class PIXELS
 {
