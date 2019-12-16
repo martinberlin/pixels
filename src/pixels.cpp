@@ -76,30 +76,17 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t 
     // Decode number of pixels, we don't have to send the entire strip if we don't want to
     uint16_t cnt = pyld[3] | pyld[4]<<8;
     if(cnt>PIXELCOUNT){
-        // We got more pixels than the strip allows
+        Serial.printf("Max PIXELCOUNT %d got %d pixels\n", PIXELCOUNT, cnt);
         *pixCnt = 0;
         return NULL;
     }
-    if (cnt ==0)
-    {
+    if (cnt ==0){
         return false;
     }
+
     pixel *result = new pixel[cnt];
+    memcpy(result, pyld+5, sizeof(pixel)*cnt);
     // TODO Add logic to return if len is impossibly large or small
-    for(uint16_t i = 0; i<cnt; i++){
-        #ifdef RGBW
-        result[i].R = pyld[5+(i*4)];
-        result[i].G = pyld[5+(i*4)+1];
-        result[i].B = pyld[5+(i*4)+2];
-        result[i].W = pyld[5+(i*4)+3];
-        #else
-        result[i].R = pyld[5+(i*3)];
-        result[i].G = pyld[5+(i*3)+1];
-        result[i].B = pyld[5+(i*3)+2];
-        #endif
-    }
-
-
     // TODO Add CRC check before setting pixCnt
     *pixCnt = cnt;
     return result; 
