@@ -3,7 +3,7 @@
 This protocols goal is to allow for sending pixel data (color values) to rgb and rgbw stripes in a performant way. This is especially useful for sending data in "realtime" to led stripes connected to an ESP32 via WIFI/UDP.
 
 This protocol was written originally for [udpx](https://github.com/martinberlin/udpx).
-Martin fork is primarily to test optimizations or just make a pull request in case I need something merged in the orifinal library.
+Martin fork is primarily to test optimizations or just make a pull request in case I need something merged in the original library from @iotpanic
 
 ## Installation
 
