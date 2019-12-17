@@ -36,7 +36,7 @@ bool PIXELS::receive(uint8_t *pyld, unsigned length){
     }
     */
     this->show(pattern, pixCnt);
-    delete pattern;
+    
     return true;
 }
 
@@ -83,13 +83,15 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t 
     if (cnt ==0){
         return false;
     }
-
-    pixel *result = new pixel[cnt];
-    memcpy(result, pyld+5, sizeof(pixel)*cnt);
     // TODO Add logic to return if len is impossibly large or small
     // TODO Add CRC check before setting pixCnt
     *pixCnt = cnt;
-    return result; 
+
+    #ifdef RGBW
+      return (RgbwColor*)(pyld+5);
+    #else
+      return (RgbColor*)(pyld+5);
+    #endif
 }
 
 void PIXELS::all_off(){
