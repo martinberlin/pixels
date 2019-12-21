@@ -105,7 +105,7 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
     // TODO Add logic to return if len is impossibly large or small
     // TODO Add CRC check before setting pixCnt
     *pixCnt = cnt;
-
+    *pixChunk = chunk;
     #ifdef RGBW
       return (RgbwColor*)(pyld+5);
     #else
