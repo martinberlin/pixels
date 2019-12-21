@@ -57,20 +57,20 @@ void PIXELS::show(){
 }
 
 void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
+    int firstChunk = cnt;
+    if (chunk) {
+        firstChunk = chunk;
+    }
+    for(unsigned i = 0; i<firstChunk; i++){
+        strip.SetPixelColor(i, pixels[i]);
+    }
+    strip.Show();
+
     #ifdef PIXELCHUNK
-        for(unsigned i = 0; i<chunk; i++){
-            strip.SetPixelColor(i, pixels[i]);
-        }
         for(unsigned i = chunk; i<(chunk*2); i++){
             strip1.SetPixelColor(i, pixels[i]);
         }
-        strip.Show();
         strip1.Show();
-    #else
-        for(unsigned i = 0; i<cnt; i++){
-            strip.SetPixelColor(i, pixels[i]);
-        }
-        strip.Show();
     #endif
 }
 
