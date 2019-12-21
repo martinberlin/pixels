@@ -5,7 +5,10 @@
     NeoPixelBus<NeoRgbwFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCOUNT, PIXELPIN);
 #else
     // RGB 3 bytes * pixel
-    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCOUNT, PIXELPIN);
+    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCHUNK, PIXELPIN);
+  #ifdef PIXELCHUNK
+    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt1Ws2812xMethod> strip1(PIXELCHUNK, PIXELPIN+1);
+  #endif
 #endif
 
 PIXELS::PIXELS(){} // I'll do something with this, I swear.
@@ -18,7 +21,8 @@ void PIXELS::init(){
 
 bool PIXELS::receive(uint8_t *pyld, unsigned length){
     uint16_t pixCnt = 0;
-    pixel *pattern = unmarshal(pyld, length, &pixCnt);
+    uint16_t pixChunk = 0;
+    pixel *pattern = unmarshal(pyld, length, &pixCnt, &pixChunk);
     if(pixCnt==0){
         strip.Show();
         Serial.println("Clearing strand");
@@ -35,7 +39,7 @@ bool PIXELS::receive(uint8_t *pyld, unsigned length){
         Serial.println(")");
     }
     */
-    this->show(pattern, pixCnt);
+    this->show(pattern, pixCnt, pixChunk);
     
     return true;
 }
@@ -52,14 +56,25 @@ void PIXELS::show(){
     strip.Show();
 }
 
-void PIXELS::show(pixel *pixels, unsigned cnt){
-    for(unsigned i = 0; i<cnt; i++){
-        strip.SetPixelColor(i, pixels[i]);
-    }
-    strip.Show();
+void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
+    #ifdef PIXELCHUNK
+        for(unsigned i = 0; i<chunk; i++){
+            strip.SetPixelColor(i, pixels[i]);
+        }
+        for(unsigned i = chunk; i<(chunk*2); i++){
+            strip1.SetPixelColor(i, pixels[i]);
+        }
+        strip.Show();
+        strip1.Show();
+    #else
+        for(unsigned i = 0; i<cnt; i++){
+            strip.SetPixelColor(i, pixels[i]);
+        }
+        strip.Show();
+    #endif
 }
 
-pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t *channel){
+pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t *channel, uint16_t *pixChunk){
     if(pyld[0]!=0x50){
         Serial.println("Missing checkvalue");
         // Set pixCnt to zero as we have not decoded any pixels and return NULL
@@ -73,8 +88,12 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t 
     if(channel!=NULL){
         *channel = pyld[2];
     }
+    // Number of chunks:
+    uint16_t chunk = pyld[1] | pyld[2]<<8;
+
     // Decode number of pixels, we don't have to send the entire strip if we don't want to
     uint16_t cnt = pyld[3] | pyld[4]<<8;
+
     if(cnt>PIXELCOUNT){
         Serial.printf("Max PIXELCOUNT %d got %d pixels\n", PIXELCOUNT, cnt);
         *pixCnt = 0;
@@ -95,6 +114,24 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t 
 }
 
 void PIXELS::all_off(){
+    #ifdef PIXELCHUNK
+    for(unsigned i = 0; i<PIXELCHUNK; i++){
+        #ifdef RGBW
+        strip.SetPixelColor(i, RgbwColor(0,0,0,0));
+        #else
+        strip.SetPixelColor(i, RgbColor(0,0,0));
+        #endif
+    }
+    for(unsigned i = PIXELCHUNK; i<(PIXELCHUNK*2); i++){
+        #ifdef RGBW
+        strip1.SetPixelColor(i, RgbwColor(0,0,0,0));
+        #else
+        strip1.SetPixelColor(i, RgbColor(0,0,0));
+        #endif
+    }
+    strip.Show();
+    strip1.Show();
+    #else
     for(unsigned i = 0; i<PIXELCOUNT; i++){
         #ifdef RGBW
         strip.SetPixelColor(i, RgbwColor(0,0,0,0));
@@ -103,4 +140,5 @@ void PIXELS::all_off(){
         #endif
     }
     strip.Show();
+    #endif
 }
