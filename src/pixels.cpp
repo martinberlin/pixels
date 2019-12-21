@@ -74,7 +74,7 @@ void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
     #endif
 }
 
-pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint8_t *channel, uint16_t *pixChunk){
+pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
     if(pyld[0]!=0x50){
         Serial.println("Missing checkvalue");
         // Set pixCnt to zero as we have not decoded any pixels and return NULL
