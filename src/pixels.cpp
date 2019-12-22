@@ -7,7 +7,7 @@
     // RGB 3 bytes * pixel
     NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCHUNK, PIXELPIN);
   #ifdef PIXELCHUNK
-    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt1Ws2812xMethod> strip1(PIXELCHUNK, PIXELPIN+1);
+    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt1Ws2812xMethod> strip1(PIXELCHUNK, 22);
   #endif
 #endif
 
@@ -67,10 +67,12 @@ void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
     strip.Show();
 
     #ifdef PIXELCHUNK
+        int pixelIndex = 0;
         for(unsigned i = chunk; i<(chunk*2); i++){
-            strip1.SetPixelColor(i, pixels[i]);
+            strip1.SetPixelColor(pixelIndex, pixels[i]);
+            pixelIndex++;
         }
-        strip1.Show();
+        strip1.Show(); 
     #endif
 }
 
