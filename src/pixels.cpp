@@ -2,12 +2,12 @@
 
 #ifdef RGBW
     // 4 bytes * pixel
-    NeoPixelBus<NeoRgbwFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCOUNT, PIXELPIN);
+    NeoPixelBus<NeoRgbwFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCOUNT, pixelpin[0]);
 #else
     // RGB 3 bytes * pixel
-    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCHUNK, PIXELPIN);
+    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt0Ws2812xMethod> strip(PIXELCHUNK, pixelpin[0]);
   #ifdef PIXELCHUNK
-    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt1Ws2812xMethod> strip1(PIXELCHUNK, 18);
+    NeoPixelBus<NeoGrbFeature, NeoEsp32Rmt1Ws2812xMethod> strip1(PIXELCHUNK, pixelpin[1]);
   #endif
 #endif
 
