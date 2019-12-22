@@ -17,6 +17,10 @@ void PIXELS::init(){
     // Starts the LEDs and blanks them out
     strip.Begin();
     strip.Show();
+    #ifdef PIXELCHUNK
+    strip1.Begin();
+    strip1.Show();
+    #endif
 }
 
 bool PIXELS::receive(uint8_t *pyld, unsigned length){
