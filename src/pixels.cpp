@@ -81,6 +81,7 @@ void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
 }
 
 pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
+    
     if(pyld[0]!=0x50){
         Serial.println("Missing checkvalue");
         // Set pixCnt to zero as we have not decoded any pixels and return NULL
@@ -94,11 +95,13 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
     if(channel!=NULL){
         *channel = pyld[2];
     }
+    uint8_t payloadByteStart = 6;
     // Number of chunks:
     uint16_t chunk = pyld[1] | pyld[2]<<8;
-
     // Decode number of pixels, we don't have to send the entire strip if we don't want to
     uint16_t cnt = pyld[3] | pyld[4]<<8;
+    // Protocol: 0 Pixels 1 byte per color, 1 -> 565
+    uint8_t prot = pyld[5];
 
     if(cnt>PIXELCOUNT){
         Serial.printf("Max PIXELCOUNT %d got %d pixels\n", PIXELCOUNT, cnt);
@@ -112,10 +115,37 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
     // TODO Add CRC check before setting pixCnt
     *pixCnt = cnt;
     *pixChunk = chunk;
+
     #ifdef RGBW
-      return (RgbwColor*)(pyld+5);
+      return (RgbwColor*)(pyld+payloadByteStart);
     #else
-      return (RgbColor*)(pyld+5);
+      switch (prot) {
+      case 0:
+      {
+        return (RgbColor*)(pyld+payloadByteStart);
+        break;
+      }
+      case 1:
+      {
+        /* 565 */
+        pixel *result = new pixel[cnt];
+        for(uint16_t i = 0; i<cnt; i++){
+            // Read in 2 bytes chunks:
+            uint8_t first = pyld[payloadByteStart+(i*2)];
+            uint8_t second = pyld[payloadByteStart+(i*2+1)];
+            uint16_t data16 = (uint16_t) first << 8 | second;
+            result[i].R = ((((data16 >> 11) & 0x1F) * 527) + 23) >> 6;
+            result[i].G = ((((data16 >> 5) & 0x3F) * 259) + 33) >> 6;
+            result[i].B = (((data16 & 0x1F) * 527) + 23) >> 6;
+            /* if (i<=10) {
+                Serial.printf("R %d G %d B %d > 1st: %d 2nd: %d \n", result[i].R,result[i].G,result[i].B,first,second);
+            } */
+        }
+        return result;
+          break;
+          }
+      }
+      
     #endif
 }
 
