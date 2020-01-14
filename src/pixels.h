@@ -12,9 +12,9 @@
 #include <Arduino.h>
 //#define RGBW //Removing the comment will enable RGBW instead of RGB
 
-#define PIXELCOUNT 968
+#define PIXELCOUNT 1000
 // Uncomment if we sent per chunks in different channels
-#define PIXELCHUNK 484 
+#define PIXELCHUNK 500 
 
 const char pixelpin[] = { 19, 18 };
 

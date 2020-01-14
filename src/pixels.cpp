@@ -141,7 +141,9 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
                 Serial.printf("R %d G %d B %d > 1st: %d 2nd: %d \n", result[i].R,result[i].G,result[i].B,first,second);
             } */
         }
-        return result;
+        RgbColor* pixels = result;
+        delete result;
+        return pixels;
           break;
           }
       }
