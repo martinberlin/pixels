@@ -82,45 +82,40 @@ void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
 
 pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
     uint8_t payloadByteStart = 6;
-
-    if(pyld[0]!=0x50){
-        Serial.println("Missing checkvalue");
-        // Set pixCnt to zero as we have not decoded any pixels and return NULL
-        *pixCnt = 0;
-        return NULL;
-    }
-
     // Number of chunks:
-    uint16_t chunk = pyld[1] | pyld[2]<<8;
-
+    uint16_t chunk = pyld[2] | pyld[3]<<8;
     // Decode number of pixels, we don't have to send the entire strip if we don't want to
-    uint16_t cnt = pyld[3] | pyld[4]<<8;
-     // Protocol: 0 Pixels 1 byte per color, 1 -> 565
-    uint8_t prot = pyld[5];
+    uint16_t cnt = pyld[4] | pyld[5]<<8;
+    *pixCnt = cnt;
+    *pixChunk = chunk;
 
     if(cnt>PIXELCOUNT){
         Serial.printf("Max PIXELCOUNT %d got %d pixels\n", PIXELCOUNT, cnt);
         *pixCnt = 0;
         return NULL;
     }
-    if (cnt ==0){
+    if (cnt == 0){
         return false;
     }
-    // TODO Add logic to return if len is impossibly large or small
-    // TODO Add CRC check before setting pixCnt
-    *pixCnt = cnt;
-    *pixChunk = chunk;
-    #ifdef RGBW
-      return (RgbwColor*)(pyld+payloadByteStart);
-    #else
-      switch (prot) {
-      case 0:
-      {
-        return (RgbColor*)(pyld+payloadByteStart);
+
+    
+    // Protocol P or R 565
+    switch (pyld[0])
+    {
+    case 0x50:
+        /* pixels */
+        {
+        #ifdef RGBW
+          return (RgbwColor*)(pyld+payloadByteStart);
+        #else
+          return (RgbColor*)(pyld+payloadByteStart);
+        #endif
         break;
-      }
-      case 1:
-      {
+        }
+        break;
+        // TODO: Not considering RGBW for 565 so far
+    case 0x52:
+    {
         /* 565 */
         pixel *result = new pixel[cnt];
         for(uint16_t i = 0; i<cnt; i++){
@@ -133,9 +128,15 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
         delete result;
         return pixels;
           break;
-          }
-      }
-    #endif
+    }
+
+    default:
+        Serial.println("Missing checkvalue");
+        // Set pixCnt to zero as we have not decoded any pixels and return NULL
+        *pixCnt = 0;
+        return NULL;
+        break;
+    }
 }
 
 void PIXELS::all_off(){

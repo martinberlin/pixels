@@ -2,6 +2,12 @@
 
 This protocols goal is to allow for sending pixel data (color values) to rgb and rgbw stripes in a performant way. This is especially useful for sending data in "realtime" to led stripes connected to an ESP32 via WIFI/UDP.
 
+## udpx Fork
+
+This is a special fork of Pixels library that contains one additional header byte more.
+Please check this excel screenshot to check the differences with the original @iotpanic pixels library:
+
+![PIXELS header bytes](http://udpx.fasani.de/assets/PIXELS-header-bytes.png)
 This protocol was written originally for [udpx](https://github.com/martinberlin/udpx).
 Martin fork is primarily to test optimizations or just make a pull request in case I need something merged in the original library from @iotpanic
 
@@ -25,8 +31,8 @@ Coming Soon, Just need to make a _library.properties_ but will be installable li
 6. In the setup code, use `bool addChannel(int pin, unsigned LED_count, uint8_t channel_number)` to connect one or many LED strips.
 7. Call `bool PIXELS::receive(uint8_t *pyld, unsigned length)` when ever pixels data is received with pyld being a uint8_t array and length being the array length. You may use any transport method you want, but check out [s - Little Stream - Embedded streaming layer for UDPX](https://github.com/IoTPanic/s).
 
-## Message Structure
-
+## Original Message Structure
+Note that this is modified in this fork of the library and is using the byte[0] to identify the protocol (P pixels 0x50, R 0x52 for PIX565)
 A message consists of a **header**, a **payload** and a **crc-check**:
 
 | Header (5Bytes) | Payload (x Bytes) | CRC-Check (1 Byte) |
