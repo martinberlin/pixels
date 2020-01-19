@@ -27,11 +27,6 @@ bool PIXELS::receive(uint8_t *pyld, unsigned length){
     uint16_t pixCnt = 0;
     uint16_t pixChunk = 0;
     pixel *pattern = unmarshal(pyld, length, &pixCnt, &pixChunk);
-    if(pixCnt==0){
-        strip.Show();
-        Serial.println("Clearing strand");
-        return true;
-    }
     /*
     for(uint i=0; i<pixCnt; i++){
         Serial.print("Got LED value RGB(");
@@ -43,9 +38,6 @@ bool PIXELS::receive(uint8_t *pyld, unsigned length){
         Serial.println(")");
     }
     */
-    this->show(pattern, pixCnt, pixChunk);
-    
-    return true;
 }
 
 void PIXELS::write(unsigned location, uint8_t R, uint8_t G, uint8_t B, uint8_t W){
@@ -58,26 +50,6 @@ void PIXELS::write(unsigned location, uint8_t R, uint8_t G, uint8_t B, uint8_t W
 
 void PIXELS::show(){
     strip.Show();
-}
-
-void PIXELS::show(pixel *pixels, unsigned cnt, unsigned chunk){
-    int firstChunk = cnt;
-    if (chunk) {
-        firstChunk = chunk;
-    }
-    for(unsigned i = 0; i<firstChunk; i++){
-        strip.SetPixelColor(i, pixels[i]);
-    }
-    strip.Show();
-
-    #ifdef PIXELCHUNK
-        int pixelIndex = 0;
-        for(unsigned i = chunk; i<(chunk*2); i++){
-            strip1.SetPixelColor(pixelIndex, pixels[i]);
-            pixelIndex++;
-        }
-        strip1.Show(); 
-    #endif
 }
 
 pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
@@ -106,27 +78,45 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
         /* pixels */
         {
         #ifdef RGBW
-          return (RgbwColor*)(pyld+payloadByteStart);
+          RgbwColor* pixels = (RgbwColor*)(pyld+payloadByteStart);
         #else
-          return (RgbColor*)(pyld+payloadByteStart);
+          RgbColor* pixels = (RgbColor*)(pyld+payloadByteStart);
         #endif
+
+            for(unsigned i = 0; i<cnt; i++){
+                strip.SetPixelColor(i, pixels[i]);
+            }
+            strip.Show();
         break;
         }
-        break;
         // TODO: Not considering RGBW for 565 so far
     case 0x52:
     {
         /* 565 */
         pixel *result = new pixel[cnt];
+        
         for(uint16_t i = 0; i<cnt; i++){
             uint16_t data16 = (uint16_t) pyld[payloadByteStart+(i*2)] << 8 | pyld[payloadByteStart+(i*2+1)];
             result[i].R = ((((data16 >> 11) & 0x1F) * 527) + 23) >> 6;
             result[i].G = ((((data16 >> 5) & 0x3F) * 259) + 33) >> 6;
             result[i].B = (((data16 & 0x1F) * 527) + 23) >> 6;
+            #ifdef PIXELCHUNK
+                if (i<chunk) {
+                    strip.SetPixelColor(i, result[i]);
+                    
+                } else {
+                    strip1.SetPixelColor(i-chunk, result[i]);
+                   
+                }
+                #else
+                strip.SetPixelColor(i, result[i]);
+            #endif
         }
-        RgbColor* pixels = result;
+        strip.Show();
+        #ifdef PIXELCHUNK
+         strip1.Show(); 
+        #endif
         delete result;
-        return pixels;
           break;
     }
 

@@ -40,9 +40,6 @@ class PIXELS
     void write(unsigned location, uint8_t R, uint8_t G, uint8_t B, uint8_t W = 0);
     // Show writes the previously made write() calls to the array of LEDs
     void show();
-    // This version of show takes a pointer to an array of pixels, as well as how long the array is. Be sure the array is in order from LED location 0 onward
-    // There is another versio that will accapt a single pixel and location
-    void show(pixel *pixels, unsigned cnt, unsigned pixChunk);
 
     void all_off();
     private:
