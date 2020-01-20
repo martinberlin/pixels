@@ -9,7 +9,6 @@
 
 #ifndef pixels_h
 #define pixels_h
-#include <Arduino.h>
 //#define RGBW //Removing the comment will enable RGBW instead of RGB
 
 #define PIXELCOUNT 1000
@@ -43,10 +42,7 @@ class PIXELS
 
     void all_off();
     private:
-    // unmarshal returns a pointer to an array of pixels and accepts a pointer to a uint8_t array payload with the length of the array, as
-    // well as a pointer to an unsigned integer which will be changed to the number of LEDs decoded from the payload. If invalid a NULL will
-    // be returned and the value at pixCnt will be set to zero.
-    pixel *unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel=NULL);
+       bool unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel=NULL);
 
     uint8_t syncWord = 0x0;
 

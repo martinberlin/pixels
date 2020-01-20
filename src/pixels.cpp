@@ -26,18 +26,7 @@ void PIXELS::init(){
 bool PIXELS::receive(uint8_t *pyld, unsigned length){
     uint16_t pixCnt = 0;
     uint16_t pixChunk = 0;
-    pixel *pattern = unmarshal(pyld, length, &pixCnt, &pixChunk);
-    /*
-    for(uint i=0; i<pixCnt; i++){
-        Serial.print("Got LED value RGB(");
-        Serial.print(pattern[i].R);
-        Serial.print(",");
-        Serial.print(pattern[i].G);
-        Serial.print(",");
-        Serial.print(pattern[i].B);
-        Serial.println(")");
-    }
-    */
+    return unmarshal(pyld, length, &pixCnt, &pixChunk);
 }
 
 void PIXELS::write(unsigned location, uint8_t R, uint8_t G, uint8_t B, uint8_t W){
@@ -52,7 +41,7 @@ void PIXELS::show(){
     strip.Show();
 }
 
-pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
+bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
     uint8_t payloadByteStart = 6;
     // Number of chunks:
     uint16_t chunk = pyld[2] | pyld[3]<<8;
@@ -64,7 +53,7 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
     if(cnt>PIXELCOUNT){
         Serial.printf("Max PIXELCOUNT %d got %d pixels\n", PIXELCOUNT, cnt);
         *pixCnt = 0;
-        return NULL;
+        return false;
     }
     if (cnt == 0){
         return false;
@@ -84,9 +73,17 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
         #endif
 
             for(unsigned i = 0; i<cnt; i++){
-                strip.SetPixelColor(i, pixels[i]);
+                #ifdef PIXELCHUNK
+                if (i<chunk) {
+                    strip.SetPixelColor(i, pixels[i]);
+                    
+                } else {
+                    strip1.SetPixelColor(i-chunk, pixels[i]);
+                }
+                #else
+                strip.SetPixelColor(i, result[i]);
+            #endif
             }
-            strip.Show();
         break;
         }
         // TODO: Not considering RGBW for 565 so far
@@ -106,16 +103,12 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
                     
                 } else {
                     strip1.SetPixelColor(i-chunk, result[i]);
-                   
                 }
                 #else
                 strip.SetPixelColor(i, result[i]);
             #endif
         }
-        strip.Show();
-        #ifdef PIXELCHUNK
-         strip1.Show(); 
-        #endif
+    
         delete result;
           break;
     }
@@ -127,6 +120,11 @@ pixel *PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t
         return NULL;
         break;
     }
+    strip.Show();
+    #ifdef PIXELCHUNK
+        strip1.Show(); 
+    #endif
+    return true;
 }
 
 void PIXELS::all_off(){
