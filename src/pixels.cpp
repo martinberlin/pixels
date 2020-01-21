@@ -43,6 +43,9 @@ void PIXELS::show(){
 
 bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
     uint8_t payloadByteStart = 6;
+
+    // Brightness level
+    float bright = pyld[1]*0.1/2;
     // Number of chunks:
     uint16_t chunk = pyld[2] | pyld[3]<<8;
     // Decode number of pixels, we don't have to send the entire strip if we don't want to
@@ -58,7 +61,6 @@ bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *
     if (cnt == 0){
         return false;
     }
-
     
     // Protocol P or R 565
     switch (pyld[0])
@@ -71,7 +73,7 @@ bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *
         #else
           RgbColor* pixels = (RgbColor*)(pyld+payloadByteStart);
         #endif
-
+        // Note: In this protocol we are not applying brightness reduction
             for(unsigned i = 0; i<cnt; i++){
                 #ifdef PIXELCHUNK
                 if (i<chunk) {
@@ -86,7 +88,8 @@ bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *
             }
         break;
         }
-        // TODO: Not considering RGBW for 565 so far
+
+        // TODO: Not considering RGBW for 565 so far since most Led Matrixes are RGB only
     case 0x52:
     {
         /* 565 */
@@ -94,9 +97,9 @@ bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *
         
         for(uint16_t i = 0; i<cnt; i++){
             uint16_t data16 = (uint16_t) pyld[payloadByteStart+(i*2)] << 8 | pyld[payloadByteStart+(i*2+1)];
-            result[i].R = ((((data16 >> 11) & 0x1F) * 527) + 23) >> 6;
-            result[i].G = ((((data16 >> 5) & 0x3F) * 259) + 33) >> 6;
-            result[i].B = (((data16 & 0x1F) * 527) + 23) >> 6;
+            result[i].R = (((((data16 >> 11) & 0x1F) * 527) + 23) >> 6) *bright;
+            result[i].G = (((((data16 >> 5) & 0x3F) * 259) + 33) >> 6) *bright;
+            result[i].B = ((((data16 & 0x1F) * 527) + 23) >> 6) *bright;
             #ifdef PIXELCHUNK
                 if (i<chunk) {
                     strip.SetPixelColor(i, result[i]);
