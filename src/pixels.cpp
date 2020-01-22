@@ -42,13 +42,14 @@ void PIXELS::show(){
 }
 
 bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *pixChunk, uint8_t *channel){
-    uint8_t payloadByteStart = 6;
-
     // Brightness level
     float bright = pyld[1]*0.1/2;
+    // For backwards compatibility in case receives 0, set brightness to 20%
+    if (bright == 0) {
+        bright = 0.2;
+    }
     // Number of chunks:
     uint16_t chunk = pyld[2] | pyld[3]<<8;
-    // Decode number of pixels, we don't have to send the entire strip if we don't want to
     uint16_t cnt = pyld[4] | pyld[5]<<8;
     *pixCnt = cnt;
     *pixChunk = chunk;
@@ -97,9 +98,9 @@ bool PIXELS::unmarshal(uint8_t *pyld, unsigned len, uint16_t *pixCnt, uint16_t *
         
         for(uint16_t i = 0; i<cnt; i++){
             uint16_t data16 = (uint16_t) pyld[payloadByteStart+(i*2)] << 8 | pyld[payloadByteStart+(i*2+1)];
-            result[i].R = (((((data16 >> 11) & 0x1F) * 527) + 23) >> 6) *bright;
-            result[i].G = (((((data16 >> 5) & 0x3F) * 259) + 33) >> 6) *bright;
-            result[i].B = ((((data16 & 0x1F) * 527) + 23) >> 6) *bright;
+            result[i].R = round((((((data16 >> 11) & 0x1F) * 527) + 23) >> 6) *bright);
+            result[i].G = round((((((data16 >> 5) & 0x3F) * 259) + 33) >> 6) *bright);
+            result[i].B = round(((((data16 & 0x1F) * 527) + 23) >> 6) *bright);
             #ifdef PIXELCHUNK
                 if (i<chunk) {
                     strip.SetPixelColor(i, result[i]);

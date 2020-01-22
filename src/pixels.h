@@ -52,5 +52,6 @@ class PIXELS
     #else
     const bool RGBWE = false;
     #endif
+    const uint8_t payloadByteStart = 6;
 };
 #endif
