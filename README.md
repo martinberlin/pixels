@@ -7,7 +7,7 @@ This protocols goal is to allow for sending pixel data (color values) to rgb and
 This is a special fork of Pixels library that contains one additional header byte more.
 Please check this excel screenshot to check the differences with the original @iotpanic pixels library:
 
-![PIXELS header bytes](http://udpx.fasani.de/assets/PIXELS-header-bytes.png)
+![PIXELS header bytes](http://udpx.fasani.de/assets/PIXELS-header-bytes-v1.png)
 This protocol was written originally for [udpx](https://github.com/martinberlin/udpx).
 Martin fork is primarily to test optimizations or just make a pull request in case I need something merged in the original library from @iotpanic
 
