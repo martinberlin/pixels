@@ -14,7 +14,7 @@
 
 #define PIXELCOUNT 1000
 // Uncomment if we sent per chunks in different channels
-#define PIXELCHUNK 500 
+//#define PIXELCHUNK 500 
 
 const char pixelpin[] = { 19, 18 };
 
